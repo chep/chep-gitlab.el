@@ -19,6 +19,12 @@
   :type 'number
   :group 'chep-gitlab)
 
+(defcustom chep-gitlab-host ""
+  "Gitlab address"
+  :tag "Gitlab address"
+  :type 'string
+  :group 'chep-gitlab)
+
 (defface chep-helm-gitlab--title
   '((((class color) (background light)) :foreground "red" :weight semi-bold)
     (((class color) (background dark)) :foreground "green" :weight semi-bold))
@@ -99,7 +105,6 @@ PER-PAGE: number of items on page max 100"
 
 (defun chep-gitlab-list-all-projects ()
   "Get a list of all projects accessible by the authenticated user."
-  (interactive)
     (let* ((page 1)
            (per-page 100)
            (projects)
@@ -122,12 +127,13 @@ PER-PAGE: number of items on page max 100"
    (gitlab-projects--get-issue-link (plist-get cand :project-id)
                                     (plist-get cand :issue-id))))
 
-(defun chep-helm-gitlab--read-token ()
+(defun chep-helm-gitlab--init ()
   (setq gitlab-token-id (with-temp-buffer
                           (insert-file-contents chep-gitlab-token-file)
                           (buffer-substring-no-properties
                            (point-min)
-                           (point-max)))))
+                           (point-max)))
+        gitlab-host chep-gitlab-host))
 
 (defun chep-helm-gitlab--issues-init (closed-too)
   (with-gitlab-auth
@@ -155,7 +161,7 @@ PER-PAGE: number of items on page max 100"
   "Browse assigned issues
 Use prefix argument to see closed issues too"
   (interactive "P")
-  (chep-helm-gitlab--read-token)
+  (chep-helm-gitlab--init)
   (helm :sources (chep-helm-gitlab--issues-source closed-too)))
 
 
@@ -213,7 +219,7 @@ Use prefix argument to see closed issues too"
 chep-gitlab-default-project-id is used to select the project
 Use prefix argument to see closed issues too."
   (interactive "P")
-  (chep-helm-gitlab--read-token)
+  (chep-helm-gitlab--init)
   (helm :sources (chep-helm-gitlab--project-issues-source
                   chep-gitlab-default-project-id
                   closed-too)))
@@ -223,7 +229,7 @@ Use prefix argument to see closed issues too."
 chep-gitlab-default-project-id is used to select the project
 Use prefix argument to see closed issues too."
   (interactive "P")
-  (chep-helm-gitlab--read-token)
+  (chep-helm-gitlab--init)
   (setq chep-gitlab-project-filter (read-from-minibuffer "project filter: "))
   (setq chep-helm-gitlab-current-project-id chep-gitlab-default-project-id)
   (helm :sources (chep-helm-gitlab--project-select-source))
@@ -231,4 +237,4 @@ Use prefix argument to see closed issues too."
                   chep-helm-gitlab-current-project-id
                   closed-too)))
 
-(provides 'chep-gitlab)
+(provide 'chep-gitlab)
